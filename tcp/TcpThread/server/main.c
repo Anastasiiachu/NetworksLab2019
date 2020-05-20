@@ -34,7 +34,6 @@ typedef struct list{
 //Массив клиентов
 client *initClient = NULL;
 
-//Счетчик клиентов
 //Инициализация текущего счетчика клиентов
 int countClients = 0;
 
@@ -110,14 +109,14 @@ void closeServer(){
 
     //Отключить всех клиентов
     for (int i =0; i < countClients; i ++){
-        //closeClient(clients);
+        closeClient(clients); исправить
     }
     close(sockfd);
     exit(1);
 
 }
 
-//Отправка сообщений всем клиентам клиентам, кроме себя
+//Отправка сообщений всем клиентам, кроме себя
 void sendMessageClients(char* message, int socket, char* name){
 
     int n;
@@ -143,19 +142,15 @@ void sendMessageClients(char* message, int socket, char* name){
         }
         tempClient = tempClient->nextClient;
     }
-
     free(sendM);
     pthread_mutex_unlock(&mutex);
 
 }
 
-
-
 //Функция для приема сообщений от клиентов
 void reciveMessage(client *socket, char* bufferMessage,  char * name){
     int n;
     int length = 0;
-    //Получаем размер сообщения
     n = read(socket->socket, &length, sizeof(int));
     printf("n afret %d\n",n);
     if (n <= 0) {
@@ -165,7 +160,6 @@ void reciveMessage(client *socket, char* bufferMessage,  char * name){
 
     if(length > 0){
         printf("Размер введенного сообщения %d\n", length);
-        //Получаем само сообщение
         n = read(socket->socket, bufferMessage, length);
         if (n <= 0) {
             perror("ERROR reading from socket\n");
@@ -178,11 +172,9 @@ void reciveMessage(client *socket, char* bufferMessage,  char * name){
     }
 }
 
-//Обработчик потока клиента
+//Обработчик потока клиента, вечно работает для каждого клиента
 void* clientWorks (void* clientI){
-    //Инициализация
     client *clientInfo= *(client**) clientI;
-    //У каждого свой буфер
     char bufferMessage[buffMessage];
     int socket = clientInfo->socket;
     char *name = clientInfo->name;
@@ -193,10 +185,8 @@ void* clientWorks (void* clientI){
     //Слушаем и получаем сообщения от клиентов
     int length = 0;
     while(1){
-
         bzero(bufferMessage, buffMessage);
         reciveMessage(clientInfo, bufferMessage,clientInfo->name);
-        //Теперь отправляем сообщение
         sendMessageClients(bufferMessage, socket, name);
 
     }
@@ -226,7 +216,7 @@ int main(int argc, char *argv[]) {
     //Идентификатор потока
     pthread_t clientTid;
 
-    /* Сокет для прослушивания других клиентов */
+    /* Сокет сервера для прослушивания других клиентов */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (sockfd < 0) {
@@ -274,11 +264,10 @@ int main(int argc, char *argv[]) {
 
             //Получаем размер сообщения
             n = read(newsockfd, &length, sizeof(int));
-
             //Вывод размера введенного сообщения
             printf("Размер введенного сообщения %d\n", length);
 
-            //Выделяем память для клиента
+            //Выделяем память для имени клиента
             char *nameClient = (char *) malloc(length);
 
             //Получаем имя клиента
@@ -288,6 +277,7 @@ int main(int argc, char *argv[]) {
             printServerLog(nameClient,3);
 
             tmpClients = initClient;
+
             newClientInfo->socket = newsockfd;
             newClientInfo->name = nameClient;
             newClientInfo->nextClient = NULL;
@@ -301,7 +291,6 @@ int main(int argc, char *argv[]) {
                 newClientInfo->prev = tmpClients;
                 tmpClients->nextClient = newClientInfo;
             }
-
             pthread_mutex_unlock(&mutex);
 
             //Создаем поток для клиента

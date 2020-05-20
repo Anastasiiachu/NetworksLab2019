@@ -154,15 +154,17 @@ void* readThread(void* sock){
 }
 
 //argv[1] - name ; argv[2] - host; argv[3] - port
+//argc - argument count
 int main(int argc, char *argv[]) {
 
     int sockfd, n;
     uint16_t portno;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    //Структуры для изменения режима работы терминала
+    struct sockaddr_in serv_addr; //адрес сервера
+    struct hostent *server; //хост сервера
+
+    //Структуры для изменения режима работы терминала (по нажатию что-то происходит)
     struct termios initial_settings, new_settings;
-    //Идентификатор потока
+    //Идентификатор потока, есть поток на чтение и поток на запись (у клиента 2 потока)
     pthread_t readThr;
     char pressButton;
     //Имя клиента
@@ -206,7 +208,6 @@ int main(int argc, char *argv[]) {
     //Инициализируем соединение с сервером
     server = gethostbyname(argv[2]);
 
-    //Проверяем что хост существует и корректный
     if (server == NULL) {
         fprintf(stderr, "ERROR, no such host\n");
         exit(0);
@@ -260,6 +261,7 @@ int main(int argc, char *argv[]) {
             if(pressButton == 'q'){
                 tcsetattr(fileno(stdin), TCSANOW, &initial_settings);
                 stopClient(sockfd);
+                break;
             }
 
         }
@@ -274,20 +276,17 @@ int main(int argc, char *argv[]) {
             int lengthMess = strlen(bufferSendMessage);
             fflush(stdin);
 
-            //Убираем последний пробел
             bufferSendMessage[strlen(bufferSendMessage)-1] = 0;
 
             if (lengthMess > 1)
                 sendMessage(lengthMess, bufferSendMessage, sockfd);
 
-            //Сбрасываем кнопку нажатия сообщения
             pressButton = 0;
 
             if (countMessRecievBuf > 0){
                 printSafeMessage();
             }
 
-            //Устанавливаем флаг снова в ноль
             flagMode = 0;
 
         }
