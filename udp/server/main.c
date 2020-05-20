@@ -45,7 +45,6 @@ char *nameCl;
 //Массив клиентов
 client *initClient = NULL;
 
-//Счетчик клиентов
 //Инициализация текущего счетчика клиентов
 int countClients = 0;
 
@@ -134,7 +133,6 @@ void findClient(){
 }
 //Функция закрытия сервера
 void closeServer(){
-
     //Отключить всех клиентов
     for (int i =0; i < countClients; i ++){
         //closeClient(clients);
@@ -155,7 +153,6 @@ void sendPacketToClient(int length, struct sockaddr_in addr){
 
 
 void makePacket(){
-
     switch (flag){
         case flagDisconnect : {
             bzero(packetTO, packetSize);
@@ -197,6 +194,8 @@ int main(int argc, char *argv[]) {
     unsigned int clilen;
     char bufferMessage[buffMessage];
     ssize_t n;
+    nameCl = argv[1];
+
 
     signal(SIGINT, signalExit);
 
@@ -210,6 +209,7 @@ int main(int argc, char *argv[]) {
     /*Инициализируем сервер*/
     bzero((char *) &serv_addr, sizeof(serv_addr));
     portno = port;
+//    указывем тип сокета/ IP адрес и порт сокета
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
@@ -235,8 +235,9 @@ int main(int argc, char *argv[]) {
 
         //Принимаем очередной пакет от клиента
         socklen_t size  = sizeof(serv_addr);
+//        от клиента получаю пакеты
         lengthPacket = recvfrom(sockfd, (char *) packetFROM, packetSize, 0, (struct sockaddr  *) &cli_addr, &size);
-
+//      первый байт пакета
         flag = ntohs(*(uint16_t *) packetFROM);
         switch(flag){
             case flagConnect : {
@@ -270,10 +271,13 @@ int main(int argc, char *argv[]) {
             case flagDisconnect: {
                 break;
             }
-            case flagMessage :{
+            case flagMessage: {
                 findClient();
                 makePacket();
                 tmpClients = initClient;
+
+                printMessage(nameCl, packetFROM+2);
+
                 while (tmpClients != NULL) {
                     if (tmpClients->addr.sin_port != cli_addr.sin_port ){
                         sendPacketToClient(maxNameSize+buffMessage, tmpClients->addr);

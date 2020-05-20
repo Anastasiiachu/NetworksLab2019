@@ -20,7 +20,7 @@
 #define maxMess 512
 //512 байт данных
 #define dataSize 512
-//516 байт пакета
+//514 байт пакета
 #define packetSize 514
 
 //Флаг режима работы клиента 0 - принимать сообщения: 1 - отправлять сообщения
@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
             if(pressButton == 'q'){
                 tcsetattr(fileno(stdin), TCSANOW, &initial_settings);
                 stopClient(sockfd);
-                exit(0);
+                break;
             }
         }
         else{
@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
             int lengthMess = strlen(bufferSendMessage);
             fflush(stdin);
             //Убираем последний пробел
-            bufferSendMessage[strlen(bufferSendMessage)-1] = 0;
+            bufferSendMessage[strlen(bufferSeкndMessage)-1] = 0;
             if (lengthMess > 1) {
                 flag = 3;
                 makePacket();
